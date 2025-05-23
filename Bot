@@ -1,0 +1,232 @@
+import json
+import requests
+from telegram import Update
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+
+TOKEN = '7570726617:AAE0r2jyNti5fcHwVw2Fw5KAeFWuxrcU8GA'
+
+# قیمت‌ها از Binance
+def get_price(symbol='BTCUSDT'):
+    res = requests.get(f"https://api.binance.com/api/v3/ticker/price?symbol={symbol}")
+    return float(res.json()['price'])
+
+# ذخیره و بارگذاری دیتا
+def load_data():
+    try:
+        with open("users.json", "r") as f:
+            return json.load(f)
+    except:
+        return {}
+
+def save_data(data):
+    with open("users.json", "w") as f:
+        json.dump(data, f)
+
+users = load_data()
+
+# دستورات ربات
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    uid = str(update.effective_user.id)
+    if uid not in users:
+        users[uid] = {'balance': 1000, 'portfolio': {}}
+        save_data(users)
+        await update.message.reply_text("به BizakCon خوش اومدی! 1000 دلار مجازی دریافت کردی.")
+    else:
+        await update.message.reply_text("قبلاً ثبت‌نام کردی!")
+
+async def balance(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    uid = str(update.effective_user.id)
+    bal = users.get(uid, {}).get('balance', 0)
+    await update.message.reply_text(f"موجودی شما: ${bal:.2f}")
+
+async def prices(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    btc = get_price('BTCUSDT')
+    eth = get_price('ETHUSDT')
+    await update.message.reply_text(f"BTC: ${btc:.2f}\nETH: ${eth:.2f}")
+
+async def buy(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    uid = str(update.effective_user.id)
+    args = context.args
+    if len(args) != 2:
+        await update.message.reply_text("فرمت درست: /buy BTC 0.01")
+        return
+
+    coin, amount = args[0].upper(), float(args[1])
+    price = get_price(f'{coin}USDT')
+    cost = amount * price
+
+    if users[uid]['balance'] >= cost:
+        users[uid]['balance'] -= cost
+        users[uid]['portfolio'][coin] = users[uid]['portfolio'].get(coin, 0) + amount
+        save_data(users)
+        await update.message.reply_text(f"خرید موفق! خریدی {amount} {coin} به قیمت ${cost:.2f}")
+    else:
+        await update.message.reply_text("موجودی کافی نیست.")
+
+async def sell(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    uid = str(update.effective_user.id)
+    args = context.args
+    if len(args) != 2:
+        await update.message.reply_text("فرمت درست: /sell BTC 0.01")
+        return
+
+    coin, amount = args[0].upper(), float(args[1])
+    if users[uid]['portfolio'].get(coin, 0) < amount:
+        await update.message.reply_text("به این مقدار از این کوین نداری!")
+        return
+
+    price = get_price(f'{coin}USDT')
+    revenue = amount * price
+    users[uid]['portfolio'][coin] -= amount
+    users[uid]['balance'] += revenue
+    save_data(users)
+    await update.message.reply_text(f"فروختی {amount} {coin} و گرفتی ${revenue:.2f}")
+
+async def portfolio(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    uid = str(update.effective_user.id)
+    pf = users[uid]['portfolio']
+    if not pf:
+        await update.message.reply_text("سبد خرید خالیه.")
+        return
+    msg = "دارایی‌ها:\n"
+    for coin, amount in pf.items():
+        msg += f"{coin}: {amount:.4f}\n"
+    await update.message.reply_text(msg)
+
+async def buycoins(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "برای خرید سکه:\n"
+        "مقدار دلخواه USDT رو به آدرس زیر بفرست:\n"
+        "`TXID رو بفرست تا اعتبارت شارژ شه`\n\n"
+        "آدرس USDT (TRC20): \n`TVqL...yourWalletAddress...`", parse_mode='Markdown'
+    )
+
+# ساخت ربات
+app = ApplicationBuilder().token(TOKEN).build()
+app.add_handler(CommandHandler("start", start))
+app.add_handler(CommandHandler("balance", balance))
+app.add_handler(CommandHandler("prices", prices))
+app.add_handler(CommandHandler("buy", buy))
+app.add_handler(CommandHandler("sell", sell))
+app.add_handler(CommandHandler("portfolio", portfolio))
+app.add_handler(CommandHandler("buycoins", buycoins))
+
+print("ربات در حال اجراست...")
+app.run_polling()
+
+import json
+import requests
+from telegram import Update
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+
+TOKEN = 'توکن رباتت رو اینجا بذار'
+
+# قیمت‌ها از Binance
+def get_price(symbol='BTCUSDT'):
+    res = requests.get(f"https://api.binance.com/api/v3/ticker/price?symbol={symbol}")
+    return float(res.json()['price'])
+
+# ذخیره و بارگذاری دیتا
+def load_data():
+    try:
+        with open("users.json", "r") as f:
+            return json.load(f)
+    except:
+        return {}
+
+def save_data(data):
+    with open("users.json", "w") as f:
+        json.dump(data, f)
+
+users = load_data()
+
+# دستورات ربات
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    uid = str(update.effective_user.id)
+    if uid not in users:
+        users[uid] = {'balance': 1000, 'portfolio': {}}
+        save_data(users)
+        await update.message.reply_text("به BizakCon خوش اومدی! 1000 دلار مجازی دریافت کردی.")
+    else:
+        await update.message.reply_text("قبلاً ثبت‌نام کردی!")
+
+async def balance(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    uid = str(update.effective_user.id)
+    bal = users.get(uid, {}).get('balance', 0)
+    await update.message.reply_text(f"موجودی شما: ${bal:.2f}")
+
+async def prices(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    btc = get_price('BTCUSDT')
+    eth = get_price('ETHUSDT')
+    await update.message.reply_text(f"BTC: ${btc:.2f}\nETH: ${eth:.2f}")
+
+async def buy(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    uid = str(update.effective_user.id)
+    args = context.args
+    if len(args) != 2:
+        await update.message.reply_text("فرمت درست: /buy BTC 0.01")
+        return
+
+    coin, amount = args[0].upper(), float(args[1])
+    price = get_price(f'{coin}USDT')
+    cost = amount * price
+
+    if users[uid]['balance'] >= cost:
+        users[uid]['balance'] -= cost
+        users[uid]['portfolio'][coin] = users[uid]['portfolio'].get(coin, 0) + amount
+        save_data(users)
+        await update.message.reply_text(f"خرید موفق! خریدی {amount} {coin} به قیمت ${cost:.2f}")
+    else:
+        await update.message.reply_text("موجودی کافی نیست.")
+
+async def sell(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    uid = str(update.effective_user.id)
+    args = context.args
+    if len(args) != 2:
+        await update.message.reply_text("فرمت درست: /sell BTC 0.01")
+        return
+
+    coin, amount = args[0].upper(), float(args[1])
+    if users[uid]['portfolio'].get(coin, 0) < amount:
+        await update.message.reply_text("به این مقدار از این کوین نداری!")
+        return
+
+    price = get_price(f'{coin}USDT')
+    revenue = amount * price
+    users[uid]['portfolio'][coin] -= amount
+    users[uid]['balance'] += revenue
+    save_data(users)
+    await update.message.reply_text(f"فروختی {amount} {coin} و گرفتی ${revenue:.2f}")
+
+async def portfolio(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    uid = str(update.effective_user.id)
+    pf = users[uid]['portfolio']
+    if not pf:
+        await update.message.reply_text("سبد خرید خالیه.")
+        return
+    msg = "دارایی‌ها:\n"
+    for coin, amount in pf.items():
+        msg += f"{coin}: {amount:.4f}\n"
+    await update.message.reply_text(msg)
+
+async def buycoins(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "برای خرید سکه:\n"
+        "مقدار دلخواه USDT رو به آدرس زیر بفرست:\n"
+        "`TXID رو بفرست تا اعتبارت شارژ شه`\n\n"
+        "آدرس USDT (TRC20): \n`TVqL...yourWalletAddress...`", parse_mode='Markdown'
+    )
+
+# ساخت ربات
+app = ApplicationBuilder().token(TOKEN).build()
+app.add_handler(CommandHandler("start", start))
+app.add_handler(CommandHandler("balance", balance))
+app.add_handler(CommandHandler("prices", prices))
+app.add_handler(CommandHandler("buy", buy))
+app.add_handler(CommandHandler("sell", sell))
+app.add_handler(CommandHandler("portfolio", portfolio))
+app.add_handler(CommandHandler("buycoins", buycoins))
+
+print("ربات در حال اجراست...")
+app.run_polling()
+
